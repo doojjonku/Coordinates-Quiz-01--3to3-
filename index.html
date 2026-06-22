@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>비밀 동물원 좌표 대탐험!</title>
+    <style>
+        body {
+            font-family: 'Nanum Gothic', sans-serif;
+            background-color: #f0fdf4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 15px;
+        }
+        h1 {
+            color: #166534;
+            margin: 5px 0;
+            font-size: 26px;
+            text-align: center;
+        }
+        .description {
+            color: #3f6212;
+            font-size: 15px;
+            margin-bottom: 15px;
+            text-align: center;
+            line-height: 1.5;
+            font-weight: bold;
+        }
+        .game-container {
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 480px;
+            width: 100%;
+            position: relative; /* 커스텀 팝업 정중앙 배치를 위한 기준점 */
+        }
+        
+        .info-header {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 0 5px;
+            box-sizing: border-box;
+        }
+        .progress {
+            font-size: 16px;
+            color: #64748b;
+            font-weight: bold;
+        }
+        .score-box {
+            font-size: 16px;
+            color: #ea580c;
+            font-weight: bold;
+            background-color: #ffedd5;
+            padding: 3px 10px;
+            border-radius: 20px;
+            border: 1px solid #fed7aa;
+        }
+
+        .quiz-box {
+            background-color: #fef08a;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 19px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+            width: 100%;
+            box-sizing: border-box;
+            border: 3px solid #ca8a04;
+            line-height: 1.6;
+            min-height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            white-space: pre-line; /* 엔터(\n) 줄바꿈이 화면에 그대로 보이도록 설정 */
+        }
+        
+        .board-wrapper {
+            display: grid;
+            grid-template-columns: 45px repeat(7, 48px);
+            grid-template-rows: repeat(7, 48px) 45px;
+            gap: 4px;
+            background-color: #cbd5e1;
+            padding: 10px;
+            border-radius: 12px;
+        }
+
+        .cell {
+            background-color: white;
+            border-radius: 6px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 28px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            user-select: none;
+            border: 1px solid #e2e8f0;
+        }
+        .cell:hover {
+            background-color: #f1f5f9;
+        }
+        
+        .cell.center-axis {
+            background-color: #e0f2fe;
+        }
+        .cell.origin {
+            background-color: #fef08a !important;
+            border: 3px solid #eab308;
+            box-sizing: border-box;
+        }
+        
+        .label-y, .label-x {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 900;
+            font-size: 24px;
+            user-select: none;
+        }
+        .label-blank {
+            background-color: transparent;
+        }
+
+        .pos { color: #ea580c; } 
+        .neg { 
+            color: #1d4ed8; 
+            text-shadow: 1px 1px 0px #dbeafe;
+        } 
+        .zero { color: #475569; font-size: 26px; }
+
+        /* 보드판 위에 부드럽게 띄울 커스텀 알림창 디자인 */
+        .custom-popup {
+            position: absolute;
+            top: 55%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 85%;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            line-height: 1.5;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            display: none; 
+            z-index: 10;
+            white-space: pre-line;
+        }
+        .popup-success {
+            background-color: #dcfce7;
+            border: 3px solid #22c55e;
+            color: #15803d;
+        }
+        .popup-warning {
+            background-color: #ffedd5;
+            border: 3px solid #f97316;
+            color: #ea580c;
+        }
+        .popup-wrong {
+            background-color: #fee2e2;
+            border: 3px solid #ef4444;
+            color: #b91c1c;
+        }
+
+        .message {
+            font-size: 17px;
+            font-weight: bold;
+            height: 40px;
+            margin-top: 15px;
+            margin-bottom: 10px;
+            text-align: center;
+            line-height: 1.4;
+            white-space: pre-line;
+        }
+        
+        .reset-btn {
+            margin-top: 10px;
+            padding: 12px 24px;
+            background-color: #4bc0c0;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            display: none;
+        }
+        .minus-text {
+            font-weight: 900;
+            font-size: 20px;
+            color: #1d4ed8;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>📍 비밀 동물원 좌표 대탐험!</h1>
+    <div class="description">
+        가운데 <b>0</b>을 기준으로 움직여요! 하늘색 길은 중심선이에요!<br>
+        <span class="neg">왼쪽과 아래쪽은 빼기(<span class="minus-text">−</span>)</span> 방, <span class="pos">오른쪽과 위쪽은 더하기(+)</span> 방!
+    </div>
+
+    <div class="game-container">
+        <div class="custom-popup" id="customPopup"></div>
+
+        <div class="info-header">
+            <div class="progress" id="progress">문제 1 / 15</div>
+            <div class="score-box" id="score">점수: 0점 / 150점</div>
+        </div>
+        
+        <div class="quiz-box" id="quiz">문제를 불러오는 중...</div>
+        
+        <div class="board-wrapper" id="board"></div>
+
+        <div class="message" id="message"></div>
+        <button class="reset-btn" id="resetBtn" onclick="resetGame()">처음부터 다시 하기</button>
+    </div>
+
+    <script>
+        const items = [
+            { icon: '🚩', x: 0, y: 0 },
+            { icon: '🐻', x: 2, y: 3 }, { icon: '🦁', x: 3, y: 2 }, { icon: '🦊', x: 1, y: 1 },
+            { icon: '🐰', x: -2, y: 3 }, { icon: '🐸', x: -1, y: 2 }, { icon: '🐷', x: -3, y: 1 },
+            { icon: '🐨', x: -1, y: -1 }, { icon: '🐶', x: -3, y: -2 }, { icon: '🐱', x: -2, y: -3 },
+            { icon: '🐸', x: 2, y: -1 }, { icon: '🦊', x: 3, y: -2 }, { icon: '🐰', x: 1, y: -3 }
+        ];
+
+        // 1~5번: 양수 문제 세트
+        const positiveQuizzes = [
+            { text: '오른쪽으로 1칸(X=1),\n위로 1층(Y=1) 자리에 있는 [여우🦊]를 찾아보세요!', x: 1, y: 1 },
+            { text: '오른쪽으로 3칸(X=3),\n위로 2층(Y=2) 자리에 있는 멋진 [사자🦁]는 어디 있을까요?', x: 3, y: 2 },
+            { text: '오른쪽으로 2칸(X=2),\n위로 끝인 3층(Y=3) 자리에 있는 커다란 [곰🐻]을 누르세요.', x: 2, y: 3 },
+            { text: '오른쪽으로 1칸(X=1) 가고,\n위아래로는 안 가요(Y=0) 자리를 콕 찝어보세요.', x: 1, y: 0 },
+            { text: '옆으로는 안 가고(X=0),\n위로만 2층(Y=2) 자리를 눌러볼까요?', x: 0, y: 2 }
+        ];
+
+        // 6~10번: 빼기 문제 세트
+        const negativeQuizzes = [
+            { text: '왼쪽 빼기 2칸(X=−2),\n위로 끝인 3층(Y=3) 자리에 있는 하얀 [토끼🐰]를 찾으세요!', x: -2, y: 3 },
+            { text: '왼쪽 빼기 3칸(X=−3),\n위로 1층(Y=1) 자리에 있는 분홍색 [돼지🐷]를 눌러보세요.', x: -3, y: 1 },
+            { text: '왼쪽 빼기 2칸(X=−2),\n아래 빼기 3층(Y=−3) 자리에 있는 [고양이🐱]는 어디 있죠?', x: -2, y: -3 },
+            { text: '왼쪽 끝 빼기 3칸(X=−3),\n아래 빼기 2층(Y=−2) 자리에 있는 [강아지🐶]를 찾으세요!', x: -3, y: -2 },
+            { text: '왼쪽 빼기 1칸(X=−1),\n아래 빼기 1층(Y=−1)에 숨은 귀여운 [코알라🐨]는?', x: -1, y: -1 }
+        ];
+
+        // 11~15번용 심화 풀
+        const randomPool = [
+            { text: '가운데 기준점인 0번 자리(X=0),\n위아래로도 안 가는(Y=0) 곳의 [깃발🚩]을 클릭하세요!', x: 0, y: 0 },
+            { text: '왼쪽 빼기 1칸(X=−1),\n위로 2층(Y=2)에 숨어있는 [개구리🐸]를 맞혀보세요.', x: -1, y: 2 },
+            { text: '오른쪽으로 2칸(X=2),\n아래 빼기 1층(Y=−1) 자리에 숨어있는 [개구리🐸]를 찾아보세요.', x: 2, y: -1 },
+            { text: '오른쪽 끝인 3칸(X=3),\n아래 빼기 2층(Y=−2) 자리에 있는 [여우🦊]를 눌러보세요.', x: 3, y: -2 },
+            { text: '오른쪽으로 1칸(X=1),\n아래 빼기 3층(Y=−3) 자리에 있는 [토끼🐰]를 찾아주세요!', x: 1, y: -3 },
+            { text: '옆으론 안 가고(X=0),\n아래 빼기 2층(Y=−2) 자리에 있는 공간을 맞춰보세요.', x: 0, y: -2 }
+        ];
+
+        let finalQuizzes = [];
+        let currentQuizIndex = 0;
+        let score = 0;
+        let attemptCount = 0;
+        let isProcessing = false; // 연타 방지용 제어락
+
+        const boardElement = document.getElementById('board');
+        const quizElement = document.getElementById('quiz');
+        const messageElement = document.getElementById('message');
+        const progressElement = document.getElementById('progress');
+        const scoreElement = document.getElementById('score');
+        const resetBtn = document.getElementById('resetBtn');
+        const popupElement = document.getElementById('customPopup');
+
+        function prepareQuizzes() {
+            finalQuizzes = [...positiveQuizzes, ...negativeQuizzes];
+            const shuffledPool = [...randomPool].sort(() => Math.random() - 0.5);
+            for(let i=0; i<5; i++) {
+                finalQuizzes.push(shuffledPool[i]);
+            }
+        }
+
+        function renderBoard() {
+            boardElement.innerHTML = '';
+
+            for (let row = 3; row >= -3; row--) {
+                const yLabel = document.createElement('div');
+                yLabel.className = 'label-y';
+                if (row > 0) { yLabel.classList.add('pos'); yLabel.innerText = row; }
+                else if (row < 0) { yLabel.classList.add('neg'); yLabel.innerText = `−${Math.abs(row)}`; }
+                else { yLabel.classList.add('zero'); yLabel.innerText = '0'; }
+                boardElement.appendChild(yLabel);
+
+                for (let col = -3; col <= 3; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    
+                    if (col === 0 || row === 0) cell.classList.add('center-axis');
+                    if (col === 0 && row === 0) cell.classList.add('origin');
+                    
+                    const item = items.find(i => i.x === col && i.y === row);
+                    if (item) cell.innerText = item.icon;
+
+                    cell.onclick = () => checkAnswer(col, row);
+                    boardElement.appendChild(cell);
+                }
+            }
+
+            const blank = document.createElement('div');
+            blank.className = 'label-blank';
+            boardElement.appendChild(blank);
+
+            for (let col = -3; col <= 3; col++) {
+                const xLabel = document.createElement('div');
+                xLabel.className = 'label-x';
+                if (col > 0) { xLabel.classList.add('pos'); xLabel.innerText = col; }
+                else if (col < 0) { xLabel.classList.add('neg'); xLabel.innerText = `−${Math.abs(col)}`; }
+                else { xLabel.classList.add('zero'); xLabel.innerText = '0'; }
+                boardElement.appendChild(xLabel);
+            }
+        }
+
+        function getReadablePosition(x, y) {
+            let xText = x > 0 ? `오른쪽으로 ${x}칸(X=${x})` : x < 0 ? `왼쪽 빼기 ${Math.abs(x)}칸(X=${x})` : `옆으로는 0칸(X=0)`;
+            let yText = y > 0 ? `위로 ${y}칸(Y=${y})` : y < 0 ? `아래 빼기 ${Math.abs(y)}칸(Y=${y})` : `위아래로는 0칸(Y=0)`;
+            return `${xText}, ${yText}`;
+        }
+
+        // 화면 내부 정중앙 팝업 띄우기 함수
+        function showCenterPopup(text, type, duration) {
+            isProcessing = true; 
+            popupElement.className = `custom-popup popup-${type}`;
+            popupElement.innerText = text;
+            popupElement.style.display = 'block';
+
+            setTimeout(() => {
+                popupElement.style.display = 'none';
+                isProcessing = false;
+                showQuiz();
+            }, duration);
+        }
+
+        function checkAnswer(clickedX, clickedY) {
+            if (currentQuizIndex >= finalQuizzes.length || isProcessing) return;
+
+            const currentQuiz = finalQuizzes[currentQuizIndex];
+            attemptCount++;
+
+            if (clickedX === currentQuiz.x && clickedY === currentQuiz.y) {
+                score += 10;
+                scoreElement.innerText = `점수: ${score}점 / 150점`;
+                
+                messageElement.className = 'message success';
+                messageElement.innerText = '🎉 정답입니다! 아주 훌륭해요!';
+                
+                currentQuizIndex++;
+                attemptCount = 0; 
+                
+                // 정답 안내:요청하신 0.7초(700ms) 동안 노출 후 자동으로 닫힘
+                showCenterPopup("🎉 정답입니다!\n아주 훌륭해요!", "success", 700);
+            } else {
+                const positionDescription = getReadablePosition(clickedX, clickedY);
+
+                if (attemptCount === 1) {
+                    messageElement.className = 'message warning';
+                    messageElement.innerText = `🤔 거기는 (${clickedX}, ${clickedY}) 자리에요.\n다시 한번 잘 생각해보세요! 기회가 1번 더 있어요!`;
+                    
+                    // 1차 오답 안내: 요청하신 1.5초(1500ms) 동안 충분히 노출 후 자동으로 닫힘
+                    showCenterPopup(`❌ 오답!\n한번의 기회가 더 있으니 신중하게 생각해보자!\n\n(내가 누른 곳: X=${clickedX}, Y=${clickedY})`, "warning", 1500);
+                } else {
+                    messageElement.className = 'message wrong';
+                    messageElement.innerText = `❌ 아쉽네요! 거기는 (${clickedX}, ${clickedY})였어요.\n다음 문제로 넘어갑니다!`;
+                    
+                    currentQuizIndex++;
+                    attemptCount = 0; 
+                    
+                    // 2차 오답 안내: 요청하신 1.5초(1500ms) 동안 충분히 노출 후 자동으로 닫힘
+                    showCenterPopup(`❌ 아쉽네요!\n이번 탐사는 실패했습니다.\n다음 문제로 넘어갑니다!`, "wrong", 1500);
+                }
+            }
+        }
+
+        function showQuiz() {
+            if (popupElement.style.display === 'block') return;
+
+            if (currentQuizIndex < finalQuizzes.length) {
+                progressElement.innerText = `문제 ${currentQuizIndex + 1} / ${finalQuizzes.length}`;
+                
+                let quizText = finalQuizzes[currentQuizIndex].text;
+                
+                if (currentQuizIndex >= 10) {
+                    quizText = quizText.replace(/\[.*?\]/g, '[ ??? ]');
+                    quizBoxDesignChange(true);
+                } else {
+                    quizBoxDesignChange(false);
+                }
+                
+                quizElement.innerText = quizText;
+                resetBtn.style.display = 'none';
+            } else {
+                progressElement.innerText = '탐험 완벽 성공!';
+                quizElement.style.backgroundColor = '#bbf7d0';
+                quizElement.style.borderColor = '#16a34a';
+                quizElement.innerText = ` 축하합니다! 최종 점수 ${score}점으로 대탐험 임무를 끝냈습니다! 🏆`;
+                messageElement.className = 'message success';
+                messageElement.innerText = '스스로 좌표 규칙을 깨우친 멋진 어린이 대장님!';
+                resetBtn.style.display = 'block';
+            }
+        }
+
+        function quizBoxDesignChange(isAdvanced) {
+            if (isAdvanced) {
+                quizElement.style.backgroundColor = '#e0f2fe';
+                quizElement.style.borderColor = '#0284c7';
+                if(!quizElement.dataset.advancedAlerted) {
+                    messageElement.className = 'message warning';
+                    messageElement.innerText = '🚀 11번부터는 동물 그림 힌트가 없는 심화 문제 단계입니다!';
+                    setTimeout(() => { if(messageElement.className.includes('warning')) messageElement.innerText=''; }, 3000);
+                    quizElement.dataset.advancedAlerted = 'true';
+                }
+            } else {
+                quizElement.style.backgroundColor = '#fef08a';
+                quizElement.style.borderColor = '#ca8a04';
+            }
+        }
+
+        function resetGame() {
+            currentQuizIndex = 0;
+            score = 0;
+            attemptCount = 0;
+            isProcessing = false;
+            delete quizElement.dataset.advancedAlerted;
+            popupElement.style.display = 'none';
+            scoreElement.innerText = `점수: ${score}점 / 150점`;
+            messageElement.innerText = '';
+            prepareQuizzes();
+            renderBoard();
+            showQuiz();
+        }
+
+        prepareQuizzes();
+        renderBoard();
+        showQuiz();
+    </script>
+</body>
+</html>
